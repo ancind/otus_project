@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 )
@@ -27,22 +28,29 @@ func NewApp(ig image.Getter, r *image.Resizer, cacheDir string, cache *lru.Cache
 
 func (a *app) Run() http.Handler {
 	f := func(w http.ResponseWriter, r *http.Request) {
-		params := r.URL.Query()
-		url := params.Get("url")
-		rawWidth, rawHeight := params.Get("width"), params.Get("height")
-
-		width, err := strconv.Atoi(rawWidth)
+		vars := mux.Vars(r)
+		var pu string
+		parsedURL, err := url.Parse(vars["imageUrl"])
 		if err != nil {
-
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
-		height, err := strconv.Atoi(rawHeight)
-		if err != nil {
-
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 
-		img, _ := a.handle(r.Context(), url, r.Header, width, height)
+		pu = parsedURL.String()
+		if parsedURL.Scheme == "" {
+			pu = fmt.Sprintf("http://%s", parsedURL.String())
+		}
+
+		width, err := strconv.Atoi(vars["width"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		height, err := strconv.Atoi(vars["height"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		img, err := a.handle(r.Context(), pu, r.Header, width, height)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
 			return
@@ -51,6 +59,9 @@ func (a *app) Run() http.Handler {
 		w.Header().Add("Content-Type", "image/jpeg")
 		w.Header().Set("Content-Length", strconv.Itoa(len(img)))
 
+		if _, err := w.Write(img); err != nil {
+			http.Error(w, err.Error(), http.StatusBadGateway)
+		}
 	}
 	router := mux.NewRouter()
 	router.HandleFunc("/fill/{width:[0-9]+}/{height:[0-9]+}/{imageUrl:.*}", f)
@@ -69,19 +80,16 @@ func (a *app) handle(ctx context.Context, url string, header http.Header, width,
 		return img, err
 	}
 
-	// 2. If not found in Cache, then try to fetch Image
 	img, err := a.imgGetter.Get(ctx, url, header)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to fetch image")
+		return nil, errors.Wrap(err, "failed to get image")
 	}
 
-	// 2. Transform Image
 	img, err = a.resizer.Resize(img, width, height)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to crop image")
+		return nil, errors.Wrap(err, "failed to transform image")
 	}
 
-	// 3. Save transformed Image
 	imgPath := path.Join(a.cacheDir, cacheKey+".jpeg")
 	err = ioutil.WriteFile(imgPath, img, 0600)
 	if err != nil {

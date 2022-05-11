@@ -6,7 +6,6 @@ import (
 	"github.com/ancind/otus_project/pkg/image"
 	"github.com/ancind/otus_project/pkg/logging"
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
 	"time"
@@ -22,6 +21,7 @@ var (
 )
 
 func init() {
+	flag.StringVar(&addr, "addr", "127.0.0.1:8080", "App addr")
 	flag.DurationVar(&connectTimeout, "connect-timeout", 25*time.Second, "Сonnection timeout")
 	flag.DurationVar(&requestTimeout, "request-timeout", 25*time.Second, "Request timeout")
 	flag.DurationVar(&shutdownTimeout, "shutdown-timeout", 30*time.Second, "Graceful shutdown timeout")
@@ -32,15 +32,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	// 1. Setup required Units
 	logger := logging.DefaultLogger
-
-	viper.SetConfigFile(".env")
-	err := viper.ReadInConfig()
-	if err != nil {
-		logger.WithError(err).Error("failed to read .env")
-	}
-
 	imgGetter := image.NewImageGetter(logger, connectTimeout*time.Second, requestTimeout*time.Second)
 	resizer := image.NewResizer()
 
@@ -58,7 +50,6 @@ func main() {
 		}()
 	}
 
-	// 3. Setup Cache
 	cache, err := lru.NewWithEvict(cacheSize, func(key interface{}, value interface{}) {
 		if path, ok := value.(string); ok {
 			defer func() {

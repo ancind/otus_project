@@ -3,11 +3,11 @@ package tests
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	_ "image/jpeg"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -25,14 +25,10 @@ func NewTestSuite() *TestSuite {
 }
 
 func (s TestSuite) DoRequest(t *testing.T, url string, width, height int) (*http.Response, []byte, error) {
-	req, err := http.NewRequestWithContext(context.Background(), "GET", "http://image-previewer:8080", nil)
-	require.NoError(t, err)
 
-	q := req.URL.Query()
-	q.Add("width", strconv.FormatInt(int64(width), 10))
-	q.Add("height", strconv.FormatInt(int64(height), 10))
-	q.Add("url", url)
-	req.URL.RawQuery = q.Encode()
+	u := fmt.Sprintf("http://image-previewer/fill/%d/%d/%s", width, height, url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, u, nil)
+	require.NoError(t, err)
 
 	res, err := s.client.Do(req)
 	require.NoError(t, err)
@@ -77,7 +73,7 @@ func TestServerDoesntExist(t *testing.T) {
 	require.Equal(t, http.StatusBadGateway, res.StatusCode)
 }
 
-func TestCropNotImage(t *testing.T) {
+func TestNotImage(t *testing.T) {
 	s := NewTestSuite()
 
 	url := "http://ngingx:80/text.txt"

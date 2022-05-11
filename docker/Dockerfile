@@ -1,6 +1,6 @@
 FROM golang:1.18-alpine AS build
 
-WORKDIR $GOPATH/src/github.com/ancind/otus-project
+WORKDIR $GOPATH/src/github.com/ancind/image-previewer
 
 COPY . ./
 RUN go mod download
