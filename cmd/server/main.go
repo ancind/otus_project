@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/ancind/otus_project/internal"
 	"github.com/ancind/otus_project/pkg/image"
 	"github.com/ancind/otus_project/pkg/logging"
@@ -11,7 +12,26 @@ import (
 	"time"
 )
 
+var (
+	addr            string
+	connectTimeout  time.Duration
+	requestTimeout  time.Duration
+	shutdownTimeout time.Duration
+	cacheDir        string
+	cacheSize       int
+)
+
+func init() {
+	flag.DurationVar(&connectTimeout, "connect-timeout", 25*time.Second, "Сonnection timeout")
+	flag.DurationVar(&requestTimeout, "request-timeout", 25*time.Second, "Request timeout")
+	flag.DurationVar(&shutdownTimeout, "shutdown-timeout", 30*time.Second, "Graceful shutdown timeout")
+	flag.StringVar(&cacheDir, "cache-dir", "", "Path to Cache dir")
+	flag.IntVar(&cacheSize, "cache-size", 5, "Size of cache")
+}
+
 func main() {
+	flag.Parse()
+
 	// 1. Setup required Units
 	logger := logging.DefaultLogger
 
@@ -20,11 +40,6 @@ func main() {
 	if err != nil {
 		logger.WithError(err).Error("failed to read .env")
 	}
-
-	connectTimeout := viper.Get("CONNECT_TIMEOUT").(time.Duration)
-	requestTimeout := viper.Get("REQUEST_TIMEOUT").(time.Duration)
-	cacheDir := viper.Get("CACHE_DIR").(string)
-	cacheSize := viper.Get("CACHE_SIZE").(int)
 
 	imgGetter := image.NewImageGetter(logger, connectTimeout*time.Second, requestTimeout*time.Second)
 	resizer := image.NewResizer()
@@ -57,6 +72,6 @@ func main() {
 		logger.WithError(err).Fatal("failed to setup cache")
 	}
 
-	server := internal.NewHttp(imgGetter, resizer, cacheDir, cache)
+	server := internal.NewHttp(addr, imgGetter, resizer, cacheDir, cache)
 	server.Start()
 }

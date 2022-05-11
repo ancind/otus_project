@@ -11,11 +11,11 @@ type HttpServer struct {
 	server *http.Server
 }
 
-func NewHttp(ig *image.HttpGetter, ir *image.Resizer, cd string, c *lru.Cache) *HttpServer {
+func NewHttp(addr string, ig *image.HttpGetter, ir *image.Resizer, cd string, c *lru.Cache) *HttpServer {
 	app := NewApp(ig, ir, cd, c)
 
 	httpSrv := &http.Server{
-		Addr:         ":8080",
+		Addr:         addr,
 		Handler:      app.Run(),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,

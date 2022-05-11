@@ -10,4 +10,4 @@ services:
     ports:
       - "8080:8080"
     environment:
-      LOG_LEVEL: "info"
+      LOG_LEVEL: "error"
