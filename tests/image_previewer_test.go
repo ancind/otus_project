@@ -75,7 +75,7 @@ func buildURL(uri string) string {
 }
 
 func getBaseURL() string {
-	return strings.TrimRight("http://127.0.0.1:8080", "/")
+	return strings.TrimRight("http://127.0.0.1", "/")
 }
 
 func readResponse(resp *http.Response) (string, error) {
