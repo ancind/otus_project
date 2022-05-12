@@ -3,10 +3,11 @@ package image
 import (
 	"context"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
 )
 
 type Service interface {
@@ -16,7 +17,6 @@ type Service interface {
 type service struct {
 	imgGetter Getter
 	resizer   Transformer
-	cacheDir  string
 	cache     *lru.Cache
 }
 

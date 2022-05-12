@@ -1,17 +1,17 @@
 package app
 
 import (
-	"github.com/ancind/otus_project/pkg/image"
 	"reflect"
 	"testing"
 
+	. "github.com/ancind/otus_project/pkg/image"
 	"github.com/rs/zerolog"
 )
 
 func TestNewHandlers(t *testing.T) {
 	type args struct {
 		logger zerolog.Logger
-		svc    image.Service
+		svc    Service
 	}
 	tests := []struct {
 		name string
