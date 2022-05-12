@@ -23,11 +23,11 @@ build-server:
 
 .PHONY: test-single
 test-single:
-	$(GO) test -v -count=1 -timeout=1m ./...
+	$(GO) test -v -count=1 -timeout=1m ./pkg/...
 
 .PHONY: test-race
 test-race:
-	$(GO) test -v -count=100 -race -timeout=5m ./...
+	$(GO) test -v -count=100 -race -timeout=5m ./pkg/...
 
 .PHONY: test-coverage
 test-coverage:
