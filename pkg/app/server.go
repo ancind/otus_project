@@ -18,8 +18,8 @@ type Server struct {
 	router *mux.Router
 }
 
-func NewServer(logger zerolog.Logger, ct, cr time.Duration, cd string, c *lru.Cache) (*Server, error) {
-	svc := image.NewService(image.NewImageGetter(logger, ct, cr), image.NewResizer(), cd, c)
+func NewServer(logger zerolog.Logger, ct, cr time.Duration, c *lru.Cache) (*Server, error) {
+	svc := image.NewService(image.NewImageGetter(logger, ct, cr), image.NewResizer(), c)
 
 	srv := &Server{
 		svc:    svc,

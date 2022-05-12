@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultImgURL = "raw.githubusercontent.com/ancind/otus_project/master/tests/static/gopher.jpg"
+var defaultImgURL = "raw.githubusercontent.com/ancind/otus_project/master/tests/static/"
 
 func Test_Resize(t *testing.T) {
 	ctx := context.Background()
@@ -31,7 +31,7 @@ func Test_Resize(t *testing.T) {
 		Status int
 	}{
 		{
-			URL:    "/fill/200/200/" + defaultImgURL,
+			URL:    "/fill/200/200/" + defaultImgURL + "gopher.jpg",
 			Status: http.StatusOK,
 		},
 		{
@@ -52,7 +52,7 @@ func Test_Resize(t *testing.T) {
 		},
 		{
 			URL:    "/fill/string/string/awd2q3@DA:::L:L!@#!@/",
-			Status: http.StatusBadRequest,
+			Status: http.StatusNotFound,
 		},
 	}
 
@@ -75,7 +75,7 @@ func buildURL(uri string) string {
 }
 
 func getBaseURL() string {
-	return strings.TrimRight("http://127.0.0.1", "/")
+	return strings.TrimRight("http://127.0.0.1:8080", "/")
 }
 
 func readResponse(resp *http.Response) (string, error) {

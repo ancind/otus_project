@@ -3,12 +3,10 @@ package image
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"path"
-
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"net/http"
 )
 
 type Service interface {
@@ -22,8 +20,8 @@ type service struct {
 	cache     *lru.Cache
 }
 
-func NewService(ig Getter, t Transformer, cacheDir string, cache *lru.Cache) Service {
-	return &service{imgGetter: ig, resizer: t, cacheDir: cacheDir, cache: cache}
+func NewService(ig Getter, t Transformer, cache *lru.Cache) Service {
+	return &service{imgGetter: ig, resizer: t, cache: cache}
 }
 
 func (s *service) ResizeImage(ctx context.Context, url string, header http.Header, width, height int) ([]byte, error) {
@@ -45,14 +43,8 @@ func (s *service) ResizeImage(ctx context.Context, url string, header http.Heade
 		return nil, errors.Wrap(err, "failed to transform image")
 	}
 
-	imgPath := path.Join(s.cacheDir, cacheKey+".jpeg")
-	err = ioutil.WriteFile(imgPath, img, 0o600)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to save image")
-	}
-
 	// 4. Add Image path to Cache
-	s.cache.Add(cacheKey, imgPath)
+	s.cache.Add(cacheKey, img)
 
 	return img, nil
 }
