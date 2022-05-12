@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultImgURL = "raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
+var defaultImgURL = "raw.githubusercontent.com/ancind/otus_project/master/tests/static/gopher.jpg"
 
 func Test_Resize(t *testing.T) {
 	ctx := context.Background()
@@ -39,19 +39,11 @@ func Test_Resize(t *testing.T) {
 			Status: http.StatusBadGateway,
 		},
 		{
-			URL:    "/fill/200/200/" + defaultImgURL + "foo.jpg",
+			URL:    "/fill/200/200/" + defaultImgURL + "no_gopher.jpg",
 			Status: http.StatusBadGateway,
 		},
 		{
-			URL:    "/fill/2000/2000/" + defaultImgURL + "_gopher_original_1024x504.jpg",
-			Status: http.StatusOK,
-		},
-		{
-			URL:    "/fill/width/height/" + defaultImgURL + "_gopher_original_1024x504.jpg",
-			Status: http.StatusNotFound,
-		},
-		{
-			URL:    "/fill/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/.env.dist",
+			URL:    "/fill/200/200/raw.githubusercontent.com/ancind/otus_project/master/tests/text.txt",
 			Status: http.StatusBadGateway,
 		},
 		{

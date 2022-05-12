@@ -46,7 +46,7 @@ func (h *Handlers) ImageHandler(w http.ResponseWriter, r *http.Request) {
 
 	img, err := h.svc.ResizeImage(r.Context(), pu, r.Header, width, height)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadGateway)
 		w.Write([]byte("resize error"))
 		h.logger.Err(err).Msg(err.Error())
 
