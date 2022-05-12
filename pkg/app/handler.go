@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/ancind/otus_project/pkg/image"
-
 	"github.com/rs/zerolog"
 )
 

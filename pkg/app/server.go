@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/ancind/otus_project/pkg/image"
-	lru "github.com/hashicorp/golang-lru"
-
 	"github.com/gorilla/mux"
+	"github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
 )
 

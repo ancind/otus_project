@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -24,14 +23,14 @@ type Getter interface {
 	Get(ctx context.Context, url string, header http.Header) ([]byte, error)
 }
 
-type HttpGetter struct {
+type HTTPGetter struct {
 	logger         zerolog.Logger
 	transport      http.RoundTripper
 	requestTimeout time.Duration
 }
 
-func NewImageGetter(l zerolog.Logger, connectTimeout time.Duration, requestTimeout time.Duration) *HttpGetter {
-	return &HttpGetter{
+func NewImageGetter(l zerolog.Logger, connectTimeout time.Duration, requestTimeout time.Duration) *HTTPGetter {
+	return &HTTPGetter{
 		logger:         l,
 		requestTimeout: requestTimeout,
 		transport: &http.Transport{
@@ -42,7 +41,7 @@ func NewImageGetter(l zerolog.Logger, connectTimeout time.Duration, requestTimeo
 	}
 }
 
-func (f HttpGetter) Get(ctx context.Context, url string, header http.Header) ([]byte, error) {
+func (f HTTPGetter) Get(ctx context.Context, url string, header http.Header) ([]byte, error) {
 	proxyRequest, err := prepareRequest(ctx, url, header)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare request")
@@ -71,7 +70,7 @@ func prepareRequest(ctx context.Context, rawURL string, header http.Header) (*ht
 	return request, nil
 }
 
-func (f *HttpGetter) doRequest(request *http.Request) ([]byte, error) {
+func (f *HTTPGetter) doRequest(request *http.Request) ([]byte, error) {
 	client := http.Client{
 		Timeout:   f.requestTimeout,
 		Transport: f.transport,

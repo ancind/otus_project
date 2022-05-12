@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/ancind/otus_project/pkg/util"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 )
@@ -29,8 +28,7 @@ func NewService(ig Getter, t Transformer, cacheDir string, cache *lru.Cache) Ser
 
 func (s *service) ResizeImage(ctx context.Context, url string, header http.Header, width, height int) ([]byte, error) {
 	// 1. Try to find image in Cache
-	str := fmt.Sprintf("%s|%d|%d", url, width, height)
-	cacheKey := util.GetHash(str)
+	cacheKey := fmt.Sprintf("%s|%d|%d", url, width, height)
 
 	if imgPath, found := s.cache.Get(cacheKey); found {
 		img, err := ioutil.ReadFile(imgPath.(string))
