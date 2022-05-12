@@ -2,13 +2,14 @@ package image
 
 import (
 	"context"
-	"github.com/ancind/otus_project/pkg/logging"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/pkg/errors"
 )
@@ -24,12 +25,12 @@ type Getter interface {
 }
 
 type HttpGetter struct {
-	logger         logging.Logger
+	logger         zerolog.Logger
 	transport      http.RoundTripper
 	requestTimeout time.Duration
 }
 
-func NewImageGetter(l logging.Logger, connectTimeout time.Duration, requestTimeout time.Duration) *HttpGetter {
+func NewImageGetter(l zerolog.Logger, connectTimeout time.Duration, requestTimeout time.Duration) *HttpGetter {
 	return &HttpGetter{
 		logger:         l,
 		requestTimeout: requestTimeout,
@@ -82,7 +83,7 @@ func (f *HttpGetter) doRequest(request *http.Request) ([]byte, error) {
 	}
 	defer func() {
 		if errClose := resp.Body.Close(); errClose != nil {
-			f.logger.WithError(errClose).Error("failed to close body")
+			f.logger.Error().Err(errClose).Msg("failed to close body")
 		}
 	}()
 

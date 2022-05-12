@@ -1,101 +1,92 @@
-package tests
+package integration_test
 
 import (
-	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
-	"image"
-	_ "image/jpeg"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
-type TestSuite struct {
-	suite.Suite
-	client *http.Client
+var defaultImgURL = "raw.githubusercontent.com/Uckyx/image-previewer/master/img_example/"
+
+func Test_Resize(t *testing.T) {
+	ctx := context.Background()
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+	c := &http.Client{
+		Timeout:   60 * time.Second,
+		Transport: customTransport,
+	}
+
+	t.Parallel()
+
+	tests := []struct {
+		URL    string
+		Status int
+	}{
+		{
+			URL:    "/fill/200/200/" + defaultImgURL + "_gopher_original_1024x504.jpg",
+			Status: http.StatusOK,
+		},
+		{
+			URL:    "/fill/200/200/raw.554123.jpg",
+			Status: http.StatusBadGateway,
+		},
+		{
+			URL:    "/fill/200/200/" + defaultImgURL + "foo.jpg",
+			Status: http.StatusBadGateway,
+		},
+		{
+			URL:    "/fill/2000/2000/" + defaultImgURL + "_gopher_original_1024x504.jpg",
+			Status: http.StatusOK,
+		},
+		{
+			URL:    "/fill/width/height/" + defaultImgURL + "_gopher_original_1024x504.jpg",
+			Status: http.StatusNotFound,
+		},
+		{
+			URL:    "/fill/200/200/raw.githubusercontent.com/Uckyx/image-previewer/dev/.env.dist",
+			Status: http.StatusBadGateway,
+		},
+		{
+			URL:    "/fill/200/200/awd2q3@DA:::L:L!@#!@/",
+			Status: http.StatusBadRequest,
+		},
+	}
+
+	for k, tt := range tests {
+		q := tt
+		t.Run(fmt.Sprintf("%s %d", q.URL, k), func(t *testing.T) {
+			t.Parallel()
+			request, _ := http.NewRequestWithContext(ctx, http.MethodGet, buildURL(q.URL), nil)
+			resp, err := c.Do(request)
+			require.NoError(t, err)
+			require.Equal(t, q.Status, resp.StatusCode)
+			_, err = readResponse(resp)
+			require.NoError(t, err)
+		})
+	}
 }
 
-func NewTestSuite() *TestSuite {
-	return &TestSuite{client: http.DefaultClient}
+func buildURL(uri string) string {
+	return fmt.Sprintf("%s/%s", getBaseURL(), strings.TrimLeft(uri, "/"))
 }
 
-func (s TestSuite) DoRequest(t *testing.T, url string, width, height int) (*http.Response, []byte, error) {
-
-	u := fmt.Sprintf("http://image-previewer/fill/%d/%d/%s", width, height, url)
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, u, nil)
-	require.NoError(t, err)
-
-	res, err := s.client.Do(req)
-	require.NoError(t, err)
-	defer res.Body.Close()
-
-	b, err := ioutil.ReadAll(res.Body)
-	require.NoError(t, err)
-
-	return res, b, err
+func getBaseURL() string {
+	return strings.TrimRight("http://127.0.0.1", "/")
 }
 
-func TestFill(t *testing.T) {
-	s := NewTestSuite()
+func readResponse(resp *http.Response) (string, error) {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
-	url := "http://nginx:80/gopher.jpg"
-	width, height := 333, 666
-
-	// nolint:bodyclose
-	res, body, err := s.DoRequest(t, url, width, height)
-	require.NoError(t, err)
-
-	require.Equal(t, http.StatusOK, res.StatusCode)
-	require.True(t, res.Header.Get("Content-Type") == "image/jpeg")
-
-	config, _, err := image.DecodeConfig(bytes.NewReader(body))
-	require.NoError(t, err)
-
-	require.Equal(t, config.Width, width)
-	require.Equal(t, config.Height, height)
-}
-
-func TestServerDoesntExist(t *testing.T) {
-	s := NewTestSuite()
-
-	url := "http://not_exist.com/gopher.jpg"
-	width, height := 333, 666
-
-	// nolint:bodyclose
-	res, _, err := s.DoRequest(t, url, width, height)
-	require.NoError(t, err)
-
-	require.Equal(t, http.StatusBadGateway, res.StatusCode)
-}
-
-func TestNotImage(t *testing.T) {
-	s := NewTestSuite()
-
-	url := "http://ngingx:80/text.txt"
-	width, height := 333, 666
-
-	// nolint:bodyclose
-	res, _, err := s.DoRequest(t, url, width, height)
-	require.NoError(t, err)
-
-	require.Equal(t, http.StatusBadGateway, res.StatusCode)
-}
-
-func TestURLWrongScheme(t *testing.T) {
-	s := NewTestSuite()
-
-	url := "ftp://ngingx:80/gopher.jpg"
-	width, height := 333, 666
-
-	// nolint:bodyclose
-	res, body, err := s.DoRequest(t, url, width, height)
-	require.NoError(t, err)
-
-	require.Equal(t, http.StatusBadGateway, res.StatusCode)
-	require.True(t, strings.Contains(string(body), "got not supported scheme"))
+	return strings.TrimSpace(string(body)), nil
 }

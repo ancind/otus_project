@@ -13,7 +13,7 @@ type Transformer interface {
 
 type Resizer struct{}
 
-func NewResizer() *Resizer {
+func NewResizer() Transformer {
 	return &Resizer{}
 }
 
