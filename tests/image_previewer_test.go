@@ -31,7 +31,7 @@ func Test_Resize(t *testing.T) {
 		Status int
 	}{
 		{
-			URL:    "/fill/200/200/" + defaultImgURL + "_gopher_original_1024x504.jpg",
+			URL:    "/fill/200/200/" + defaultImgURL,
 			Status: http.StatusOK,
 		},
 		{
@@ -48,6 +48,10 @@ func Test_Resize(t *testing.T) {
 		},
 		{
 			URL:    "/fill/200/200/awd2q3@DA:::L:L!@#!@/",
+			Status: http.StatusBadRequest,
+		},
+		{
+			URL:    "/fill/string/string/awd2q3@DA:::L:L!@#!@/",
 			Status: http.StatusBadRequest,
 		},
 	}
