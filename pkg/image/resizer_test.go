@@ -18,12 +18,12 @@ func Test_Positive(t *testing.T) {
 		height      int
 	}{
 		{
-			name:        "success resize 256x126",
+			name:        "success resize 235x545",
 			ctx:         ctx,
 			width:       235,
 			height:      545,
 			originalImg: loadImage("gopher.jpg"),
-			resizedImg:  loadImage("gopher_333x666.jpg"),
+			resizedImg:  loadImage("gopher_235x545.jpg"),
 		},
 	}
 
