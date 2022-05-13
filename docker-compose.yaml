@@ -1,0 +1,29 @@
+version: "3.6"
+
+networks:
+  previewer:
+
+services:
+  image_previewer:
+    container_name: image_previewer
+    build:
+      context: .
+      dockerfile: server.dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    networks:
+      - previewer
+
+  nginx:
+    container_name: image_previewer_nginx
+    image: nginx:1.21.4
+    ports:
+      - "80:80"
+    volumes:
+      - ./.docker/conf/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - "image_previewer"
+    networks:
+      - previewer
